@@ -1,0 +1,38 @@
+extends layout
+
+block content
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js")
+
+
+    div
+
+        div
+            .chart-container
+            canvas#chartPic
+            script.
+                var ipayload = JSON.parse('!{payload}');
+                console.log(ipayload);
+                var ctx = document.getElementById("chartPic").getContext('2d');
+                ctx.canvas.parentNode.style.width = '80%';
+                var chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Pre season', 'Bahrain GP', 'Saudi Arabia GP', 'Australian GP', 'Azerbaijan GP', 'Miami GP',
+                            'Monaco GP', 'Spain GP', 'Canadian GP', 'Austrian GP', 'British GP', 'Hungarian GP', 'Belgian GP',
+                            'Dutch GP', 'Italian GP', 'Singapore GP', 'Japan GP', 'Qatar GP', 'Austin GP', 'Mexican GP',
+                            'Las Vegas GP', 'Sao Paulo GP', 'Abu Dhabi GP'],
+                        datasets: ipayload
+                    },
+                    options: {
+                        title: {
+                            display: true,
+                            text: "Trend of sentiment - Formula 1 Championship 2023"
+                        },
+                        legend: {
+                            position: 'bottom'
+                        },
+                        xAxes: {
+                            display: true
+                        }
+                    }
+                });
