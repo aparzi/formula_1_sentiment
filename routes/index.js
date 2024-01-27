@@ -5,6 +5,7 @@ const aposToLexForm = require('apos-to-lex-form');
 const natural = require('natural');
 const SpellCorrector = require('spelling-corrector');
 const SW = require('stopword');
+const fs = require('fs');
 
 const spellCorrector = new SpellCorrector();
 spellCorrector.loadDictionary();
@@ -19,34 +20,65 @@ router.get('/sentiment', async (req, res) => {
 
         try {
             const posts = [
-                'https://api.reddit.com/r/formula1/comments/10r0w6a/announcement_welcome_to_the_2023_f1_season',
-                'https://api.reddit.com/r/formula1/comments/11j1huz/2023_bahrain_grand_prix_post_race_discussion',
-                'https://api.reddit.com/r/formula1/comments/11vq76l/2023_saudi_arabian_grand_prix_race_discussion/',
-                'https://api.reddit.com/r/formula1/comments/129dvvg/2023_australian_grand_prix_post_race_discussion/',
-                'https://api.reddit.com/r/formula1/comments/133o178/2023_azerbaijan_grand_prix_post_race_discussion/',
-                'https://api.reddit.com/r/formula1/comments/13b2sc8/2023_miami_grand_prix_post_race_discussion/',
-                'https://api.reddit.com/r/formula1/comments/13u2g56/2023_monaco_grand_prix_post_race_discussion/',
-                'https://api.reddit.com/r/formula1/comments/140esk5/2023_spanish_grand_prix_post_race_discussion/',
-                'https://api.reddit.com/r/formula1/comments/14ctc0l/2023_canadian_grand_prix_post_race_discussion/',
-                'https://api.reddit.com/r/formula1/comments/14oprcg/2023_austrian_grand_prix_postrace_discussion/',
-                'https://api.reddit.com/r/formula1/comments/14v1mc4/2023_british_grand_prix_postrace_discussion/',
-                'https://api.reddit.com/r/formula1/comments/157gktr/2023_hungarian_grand_prix_postrace_discussion/',
-                'https://api.reddit.com/r/formula1/comments/15dmykn/2023_belgian_grand_prix_postrace_discussion/',
-                'https://api.reddit.com/r/formula1/comments/162tdrr/2023_dutch_grand_prix_postrace_discussion/',
-                'https://api.reddit.com/r/formula1/comments/168yodr/2023_italian_grand_prix_postrace_discussion/',
-                'https://api.reddit.com/r/formula1/comments/16l17fx/2023_singapore_grand_prix_postrace_discussion/',
-                'https://api.reddit.com/r/formula1/comments/16qqikt/2023_japanese_grand_prix_postrace_discussion/',
-                'https://api.reddit.com/r/formula1/comments/1736aot/2023_qatar_grand_prix_postrace_thread/',
-                'https://api.reddit.com/r/formula1/comments/17e2qb7/2023_united_states_grand_prix_postrace_discussion/',
-                'https://api.reddit.com/r/formula1/comments/17je0y4/2023_mexico_city_grand_prix_postrace_discussion/',
-                'https://api.reddit.com/r/formula1/comments/17oizvd/2023_são_paulo_grand_prix_postrace_discussion/',
-                'https://api.reddit.com/r/formula1/comments/17yrso4/2023_las_vegas_grand_prix_postrace_discussion/',
-                'https://api.reddit.com/r/formula1/comments/184byfj/2023_abu_dhabi_grand_prix_postrace_thread/'
+                // 'https://api.reddit.com/r/formula1/comments/10r0w6a/announcement_welcome_to_the_2023_f1_season',
+                // 'https://api.reddit.com/r/formula1/comments/11j1huz/2023_bahrain_grand_prix_post_race_discussion',
+                // 'https://api.reddit.com/r/formula1/comments/11vq76l/2023_saudi_arabian_grand_prix_race_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/129dvvg/2023_australian_grand_prix_post_race_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/133o178/2023_azerbaijan_grand_prix_post_race_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/13b2sc8/2023_miami_grand_prix_post_race_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/13u2g56/2023_monaco_grand_prix_post_race_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/140esk5/2023_spanish_grand_prix_post_race_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/14ctc0l/2023_canadian_grand_prix_post_race_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/14oprcg/2023_austrian_grand_prix_postrace_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/14v1mc4/2023_british_grand_prix_postrace_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/157gktr/2023_hungarian_grand_prix_postrace_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/15dmykn/2023_belgian_grand_prix_postrace_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/162tdrr/2023_dutch_grand_prix_postrace_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/168yodr/2023_italian_grand_prix_postrace_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/16l17fx/2023_singapore_grand_prix_postrace_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/16qqikt/2023_japanese_grand_prix_postrace_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/1736aot/2023_qatar_grand_prix_postrace_thread/',
+                // 'https://api.reddit.com/r/formula1/comments/17e2qb7/2023_united_states_grand_prix_postrace_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/17je0y4/2023_mexico_city_grand_prix_postrace_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/17oizvd/2023_são_paulo_grand_prix_postrace_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/17yrso4/2023_las_vegas_grand_prix_postrace_discussion/',
+                // 'https://api.reddit.com/r/formula1/comments/184byfj/2023_abu_dhabi_grand_prix_postrace_thread/'
+            ];
+
+            const files = [
+                'pre_season.json',
+                'bahrein_grand_prix_post_race.json',
+                'saudi_arabian_grand_prix_post_race.json',
+                'australian_grand_prix_post_race.json',
+                'azerbaijan_grand_prix_post_race.json',
+                'miami_grand_prix_post_race.json',
+                'monaco_grand_prix_post_race.json',
+                'spanish_grand_prix_post_race.json',
+                'canadian_grand_prix_post_race.json',
+                'austrian_grand_prix_post_race.json',
+                'british_grand_prix_post_race.json',
+                'hungarian_grand_prix_post_race.json',
+                'belgian_grand_prix_post_race.json',
+                'dutch_grand_prix_post_race.json',
+                'italian_grand_prix_post_race.json',
+                'singapore_grand_prix_post_race.json',
+                'japanese_grand_prix_post_race.json',
+                'qatar_grand_prix_post_race.json',
+                'united_states_grand_prix_post_race.json',
+                'mexico_grand_prix_post_race.json',
+                'brasile_grand_prix_post_race.json',
+                'las_vegas_grand_prix_post_race.json',
+                'abu_dhabi_grand_prix_post_race.json'
             ];
 
             const result = {};
-            for (let i = 0; i < posts.length; i++) {
-                result[`post_${i + 1}`] = await getSentimentRedditPost(posts[i]);
+            for (let i = 0; i < files.length; i++) {
+                console.log('read file => ', files[i]);
+                // result[`post_${i + 1}`] = await getSentimentRedditPost(posts[i]);
+                const data = fs.readFileSync(`${__dirname}/data/${files[i]}`);
+                result[`post_${i + 1}`] = JSON.parse(data);
+                // fs.writeFileSync(`${__dirname}/data/${files[i]}`, JSON.stringify(result[`post_${i + 1}`]));
+                console.log('file scritto => ', files[i]);
             }
 
             console.log('posts result => ', result);
@@ -55,7 +87,7 @@ router.get('/sentiment', async (req, res) => {
             let neutralSentiment = [];
             let negativeSentiment = [];
 
-            for (let i = 0; i < posts.length; i++) {
+            for (let i = 0; i < files.length; i++) {
                 positiveSentiment.push(result?.[`post_${i + 1}`]?.['total']?.['positive']);
                 neutralSentiment.push(result?.[`post_${i + 1}`]?.['total']?.['neutral']);
                 negativeSentiment.push(result?.[`post_${i + 1}`]?.['total']?.['negative']);
